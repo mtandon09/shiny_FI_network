@@ -1,5 +1,4 @@
 library(shiny)
-# library(DT)
 library(shinyjs)
 library(shinyBS)
 
@@ -21,8 +20,13 @@ shinyUI(fluidPage(
         tags$hr(),
         checkboxInput("include_neighbors", "Include neighboring genes?", TRUE),
         
+        # tags$hr(),
+        # tags$div(id = "source_checkboxes"),
+        checkboxGroupInput("source_checkboxes","Select Sources",
+                           choices=c("Reactome_FI","mirTarBase"),selected = "Reactome_FI"),
+        
         tags$br(),
-        actionButton("make_plot", "Make Plot"),
+        actionButton("make_plot", "Make Network"),
         
         tags$hr(),
         tags$em("[Optional]"),
@@ -92,10 +96,10 @@ shinyUI(fluidPage(
                                                   hoverId = NULL, inline = FALSE),
                                        
                                        br(),
-                                       downloadButton("download_smp_plot_ID",label="Download plot"),
-                                       bsModal("modal_smp","Download plot","download_smp_plot_ID",
-                                               radioButtons("type_smp_plot","Format",c("pdf","png","tiff"),selected="pdf"),
-                                               downloadButton("download_smp_plot","OK")),
+                                       downloadButton("download_plot_button",label="Download plot"),
+                                       bsModal("modal_smp","Download plot","download_plot_button",
+                                               radioButtons("save_type","Format",c("pdf","png","tiff"),selected="pdf"),
+                                               downloadButton("download_plot","OK")),
                                        # downloadButton("download_smp_table",label="Download table"),
                                        p()
                                        # DTOutput("contents")

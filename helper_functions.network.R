@@ -2,7 +2,8 @@ plot_interaction_network <- function(diff_exp_results=NULL, query_genes=NULL, pv
                              get_neighbors=FALSE,
                              gene_column="gene",fc_column="logFC",pval_column="adj.P.Val",
                              maf=NULL, min_mutated_samples = 1,
-                             savename=NULL,
+                             savename=NULL,plotwidth=1000, plotheight=1200,
+                             sources=c("Reactome_FI"),
                              gene_interaction_saved_data="data/gene_interactions.Rdata") {
   
   require(igraph)
@@ -20,7 +21,17 @@ plot_interaction_network <- function(diff_exp_results=NULL, query_genes=NULL, pv
     stop("Need saved network interaction data.")
   }
   
-  full_interaction_network <- graph_from_data_frame(gene_int_mat.uniq)
+  # browser()
+  if ("data_source" %in% colnames(gene_int_mat.uniq)) {
+    # sources <- c("Reactome_FI", "miRTarBase")
+    # sources <- c("Reactome_FI")
+    myinteractions <- gene_int_mat.uniq[gene_int_mat.uniq$data_source %in% sources,]
+  } else {
+    myinteractions <- gene_int_mat.uniq
+  }
+  myinteractions <- myinteractions[, !colnames(myinteractions) %in% "data_source"]
+  print(paste0("Total interaction in DB: ", nrow(myinteractions)))
+  full_interaction_network <- graph_from_data_frame(myinteractions)
   
   if (is.null(diff_exp_results)) {
     diff_exp_results <- as.data.frame(matrix(0, nrow=1, ncol=3))
@@ -239,7 +250,11 @@ plot_interaction_network <- function(diff_exp_results=NULL, query_genes=NULL, pv
     theme_blank()
   
   if (! is.null(savename)) {
-    ggsave(myplot, filename = savename, width=8, height=8) 
+    # ggsave(myplot, filename = savename, width=8, height=8) 
+    mydpi=300
+    plotwidth_inches=plotwidth/mydpi
+    plotheight_inches=plotheight/mydpi
+    ggsave(myplot, filename = savename, width=plotwidth_inches, height=plotheight_inches, units = "in", dpi=mydpi) 
   } else {
     print(myplot)
   }
