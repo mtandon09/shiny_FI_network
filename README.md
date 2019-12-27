@@ -24,7 +24,10 @@ if(length(new.bioc.packages)) BiocManager::install(new.bioc.packages)
 ```
 
 ### Run from GitHub in RStudio
-`runGitHub( "shiny_FI_network", "mtandon09", ref="with_mirna")`
+```
+library(shiny)
+runGitHub( "shiny_FI_network", "mtandon09", ref="with_mirna")
+```
 
 
 
