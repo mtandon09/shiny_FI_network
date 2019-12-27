@@ -1,5 +1,13 @@
 # shiny_FI_network
-Shiny app for plotting gene functional interaction networks
+## Shiny app for plotting gene functional interaction networks
+Currently only accepts manually entered genes (expression/mutation data not implemented yet)
+
+Use cases:
+- Enter a few genes to view their interacting neighbors
+- Enter a large list (say top 250 differentially expressed genes) and exclude neighbors to view interactions among them
+- Enter a mature microRNA name, and view interacting neighbors, with or without the Reactome FI data
+
+To do: enable file upload to overlay fold-change or mutation data
 
 ## How to run
 ### Install Required Packages
@@ -17,6 +25,8 @@ BiocManager::install(new.bioc.packages)
 
 ### Run from GitHub in RStudio
 `runGitHub( "shiny_FI_network", "mtandon09", ref="with_mirna")`
+
+
 
 ## Data Sources
 ### Reactome FI
