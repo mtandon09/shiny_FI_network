@@ -4,8 +4,14 @@ Currently only accepts manually entered genes (expression/mutation data not impl
 
 Use cases:
 - Enter a few genes to view their interacting neighbors
+-- e.g `BRCA2, MSH2`
+- Enter a mature microRNA name to view their interacting neighbors (targets)
+-- e.g. `hsa-miR-5100`
+-- Select `mirTarBase` as the data source
 - Enter a large list (say top 250 differentially expressed genes) and exclude neighbors to view interactions among them
-- Enter a mature microRNA name, and view interacting neighbors, with or without the Reactome FI data
+-- You can include neighbors if you like, but the resulting plot is usually too busy to be informative
+
+
 
 To do: enable file upload to overlay fold-change or mutation data
 
