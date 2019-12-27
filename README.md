@@ -20,7 +20,7 @@ list.of.bioc.packages <- c("maftools")
 if (!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
 new.bioc.packages <- list.of.bioc.packages[!(list.of.bioc.packages %in% installed.packages()[,"Package"])]
-BiocManager::install(new.bioc.packages)
+if(length(new.bioc.packages)) BiocManager::install(new.bioc.packages)
 ```
 
 ### Run from GitHub in RStudio
