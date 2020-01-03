@@ -13,8 +13,10 @@ library(shinycssloaders)
 library(shinyWidgets)
 
 library(BiocManager)
-options(repos = BiocManager::repositories())
 library(maftools)
+
+# options(repos = BiocManager::repositories())
+options(shiny.maxRequestSize=30*1024^2) 
 
 source("helper_functions.network.R")
 
