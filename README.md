@@ -3,7 +3,7 @@
  
 ## Shiny app for plotting gene functional interaction networks
 
-The idea is that you can EITHER 
+So far, the idea is that you can:
  * view interactions among gene(s) of interest, and overlay expression data if available
  * OR view interactions among your *top N significant genes* from uploaded data
  
