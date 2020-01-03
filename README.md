@@ -3,11 +3,9 @@
  
 ## Shiny app for plotting gene functional interaction networks
 
-You can view interactions between genes by entering a HUGO gene symbol
-
 The idea is that you can EITHER 
- * view interactions among your *top N significant genes*
- * OR view interactions among genes of interest, and overlay expression data if available
+ * view interactions among gene(s) of interest, and overlay expression data if available
+ * OR view interactions among your *top N significant genes* from uploaded data
  
 
 Use cases:
