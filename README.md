@@ -1,5 +1,8 @@
-# shiny_FI_network
+# Functional Networks of Gene Interactions (FuNGIn)
+*like fun+engine*
+ 
 ## Shiny app for plotting gene functional interaction networks
+
 You can view interactions between genes by entering a HUGO gene symbol
 
 The idea is that you can EITHER 
@@ -43,7 +46,7 @@ runGitHub( "shiny_FI_network", "mtandon09", ref="with_mirna")
 
 You can also upload a tab/comma-delimited or .xlsx file with differential expression information.
 The following data are recognized:
-- HUGO Gene Symbol (required
+- HUGO Gene Symbol (required)
 - Fold-change Value (log fold-change values make for better coloring)
 - Significance Value (adjusted p-value, FDR, etc.)
 
