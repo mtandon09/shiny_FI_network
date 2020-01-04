@@ -3,21 +3,30 @@
  
 ## Shiny app for plotting gene functional interaction networks
 
-So far, the idea is that you can:
- * view interactions among gene(s) of interest, and overlay expression data if available
- * OR view interactions among your *top N significant genes* from uploaded data
+So far, the idea is that you can view interactions among gene(s) of interest, and overlay expression data if available, OR view interactions among your *top N significant genes* from uploaded data
  
+* [Use cases:](#use-cases)
+* [How to run](#how-to-run)
+   * [Install Required Packages](#install-required-packages)
+   * [Run from GitHub in RStudio](#run-from-github-in-rstudio)
+* [Differential Expression Data](#differential-expression-data)
+* [Data Sources](#data-sources)
+   * [Reactome FI](#reactome-fi)
+   * [miRNA Targets](#mirna-targets)
+* [To Do](#to-do)
 
-Use cases:
-- Enter a few genes to view their interacting neighbors
-    * e.g `BRCA2, MSH2`
-- Enter a mature microRNA name to view their interacting neighbors (targets)
-    * e.g. `hsa-miR-5100`
+# Use cases:
+- Enter a few genes to view their interacting neighbors, e.g. `BRCA2,MSH2`
+    ![alt text](screenshots/query_genes.png "Query for BRCA2 and MSH2")
+- Enter mature microRNA(s) to view their interacting neighbors (targets)
     * Select at least `mirTarBase` as the data source
-- Enter a large list (say top 250 differentially expressed genes) and exclude neighbors to view interactions among them
-    * You can include neighbors if you like, but the resulting plot is usually too busy to be informative
+    * Select "Reactome_FI" to view interactions among target genes also
+    ![alt text](screenshots/query_mirna.png "Query for a microRNA")
 - Use expression data with any combination of the above
-
+    * Use top differentially expressed genes from a file
+    ![alt text](screenshots/diff_exp_genes.png "Input differential expression data from a file")
+    * Enter query genes and overlay expression information
+    ![alt text](screenshots/query_genes_with_diff_exp.png "Differential expression data on queried genes")
 
 ## How to run
 ### Install Required Packages
@@ -61,6 +70,7 @@ miRTarBase [[paper]](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5753222/)[[web
 
 # To Do
 - Enable file upload to overlay mutation data
-- Lots of control flow changes
+- Lots of control flow changes for better Shiny-ness
 - Lots of aesthetic changes for the network plot
+    * Legends don't really work/look crappy
 - Lots of UI changes
