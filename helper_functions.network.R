@@ -4,6 +4,7 @@ plot_interaction_network <- function(diff_exp_results=NULL, query_genes=NULL, pv
                              maf=NULL, min_mutated_samples = 1,
                              savename=NULL,plotwidth=1000, plotheight=1200,
                              sources=c("Reactome_FI"),
+                             progress_func=NULL,
                              gene_interaction_saved_data="data/gene_interactions.Rdata") {
   
   require(igraph)
@@ -23,6 +24,9 @@ plot_interaction_network <- function(diff_exp_results=NULL, query_genes=NULL, pv
     stop("Need saved network interaction data.")
   }
   
+  if (is.function(progress_func)) {
+    progress_func(value=0, detail = "Setting up...")
+  }
   # browser()
   if ("data_source" %in% colnames(gene_int_mat.uniq)) {
     # sources <- c("Reactome_FI", "miRTarBase")
@@ -32,11 +36,11 @@ plot_interaction_network <- function(diff_exp_results=NULL, query_genes=NULL, pv
     myinteractions <- gene_int_mat.uniq
   }
   myinteractions <- myinteractions[, !colnames(myinteractions) %in% "data_source"]
-  print(paste0("Total interaction in DB: ", nrow(myinteractions)))
+  # print(paste0("Total interaction in DB: ", nrow(myinteractions)))
   full_interaction_network <- graph_from_data_frame(myinteractions)
   
   if (is.null(diff_exp_results)) {
-    diff_exp_results <- as.data.frame(matrix(0, nrow=1, ncol=3))
+    diff_exp_results <- as.data.frame(matrix(NA, nrow=1, ncol=3))
     colnames(diff_exp_results) <- c(gene_column, fc_column, pval_column)
   }
   diff_exp_results <- diff_exp_results[order(diff_exp_results[,pval_column], decreasing = F),]
@@ -60,6 +64,10 @@ plot_interaction_network <- function(diff_exp_results=NULL, query_genes=NULL, pv
     return(return_list)
   }
   
+  if (is.function(progress_func)) {
+    progress_func(value=20, detail = "Trimming network...")
+  }
+  
   if (get_neighbors) {
     # print(sum(is.na(query_genes)))
     # print(query_genes)
@@ -71,6 +79,7 @@ plot_interaction_network <- function(diff_exp_results=NULL, query_genes=NULL, pv
   } else {
     query_nodes <- V(full_interaction_network)[query_genes]
   }
+  
   
   my_interaction_graph <- simplify(induced_subgraph(full_interaction_network,query_nodes), edge.attr.comb="sum")
   match_idx <- match(V(my_interaction_graph)$name,diff_exp_results[,gene_column],nomatch = 0)
@@ -109,6 +118,7 @@ plot_interaction_network <- function(diff_exp_results=NULL, query_genes=NULL, pv
   my_attrs <- data.frame(vname=V(curr_graph)$name)
   
   my_attrs$logFC <- diff_exp[match(my_attrs$vname, diff_exp$gene), fc_column]
+  # my_attrs$logFC[is.na(my_attrs$logFC)] <- 0
   my_attrs$pval <- diff_exp[match(my_attrs$vname, diff_exp$gene), pval_column]
   my_attrs$pval_binary <- ifelse(my_attrs$pval < pval_cutoff, paste0("p < ",pval_cutoff), 
                                  ifelse(my_attrs$pval >= pval_cutoff, "ns",NA))
@@ -147,6 +157,7 @@ plot_interaction_network <- function(diff_exp_results=NULL, query_genes=NULL, pv
   strengths <- strength(curr_graph, mode="out")
   edgelist<-data.frame(get.edgelist(curr_graph))
   weights <- strengths[match(edgelist[,1], names(strengths))]
+  # weights <- log2(strengths[match(edgelist[,1], names(strengths))])
   # weights <- 10^(1-weights/max(weights))
   # weights <- 2^(1-weights/max(weights))
   weights <- exp(1-weights/max(weights))
@@ -154,10 +165,6 @@ plot_interaction_network <- function(diff_exp_results=NULL, query_genes=NULL, pv
   
   change_bin <- ifelse(edge_attr(curr_graph,"change")==0,"Other",ifelse(edge_attr(curr_graph,"change")<0,"Inhibition", "Activation"))
   curr_graph <- set_edge_attr(curr_graph,"interaction_type",value=change_bin)
-  
-  # if (length(V(curr_graph)$name) < 1) {
-  #   browser()
-  # }
   
   plotgraph <- asNetwork(curr_graph)
   
@@ -191,13 +198,15 @@ plot_interaction_network <- function(diff_exp_results=NULL, query_genes=NULL, pv
                      ifelse(nnodes > 100, 5,
                             ifelse(nnodes > 10, 8, nnodes)))
   
-  suppressWarnings(fc_color_limit <- max(abs(get.vertex.attribute(plotgraph, "logFC")), na.rm = T) * c(-1, 1))
+  # suppressWarnings(fc_color_limit <- max(abs(get.vertex.attribute(plotgraph, "logFC")), na.rm = T) * c(-1, 1))
   # fc_colors <- colorRampPalette(rev(brewer.pal(11,"PiYG")))(100)
   # fc_colors.values <- seq(range(plotdata$logFC)[1],range(plotdata$logFC)[2],length.out = 100)
   # browser()
   # fc_range <- range(plotdata$logFC, na.rm=T)
   # fc_colors.values <- seq(max(abs(fc_range))*-1,max(abs(fc_range))*1,length.out = 100)
-  if (sum(is.infinite(fc_color_limit)) > 0) {
+  # if (sum(is.infinite(fc_color_limit)) > 0) {
+  # if (sum(is.infinite(fc_color_limit)) > 0) {
+  if (all(is.na(plotdata$logFC))) {
     fc_color_limit <- c(0,0)
     showFClegend=F
   } else {
@@ -211,17 +220,14 @@ plot_interaction_network <- function(diff_exp_results=NULL, query_genes=NULL, pv
   gene_name_colors["No data"] <- "black"
   
   # browser()
-  
-  myplot <- ggplot(plotdata, 
-                   aes(x = x, y = y, xend = xend, yend = yend))+#,
-                   # layout = "fruchtermanreingold", cell.jitter = 2, niter=1000, area=layout_area_param) +
-                   # layout = "hall", niter=100) +
-                   # layout = "target", niter=1000) +
-                   # layout = "kamadakawai", niter=10000,initemp=1000,cool.exp=0.1) +
-    # layout = "mds", niter=1000, var="geodist", dist="maximum") +
-    # layout = "spring", repulse=T, mass=0.1, k=0.001, kfr=0.01, repeqdis=0.5) +
-    # layout = "mds") +
-    # geom_edges(color= "grey50", alpha=0.5,size=0.1,curvature = 0.2,
+  # plotdata$size_val <- plotdata$strength
+  plotdata$size_val <- abs(plotdata$logFC)
+  plotdata$size_val[is.na(plotdata$size_val)] <- 1
+  # print(plotdata$logFC)
+  # print(range(plotdata$logFC, na.rm=F))
+  # print(range(plotdata$logFC, na.rm=T))
+  edges_plot <- ggplot(plotdata, 
+                   aes(x = x, y = y, xend = xend, yend = yend))+
     geom_edges(data = subset(plotdata, interaction_type %in% "Other"),
                aes(color= interaction_type), alpha=0.5,size=edgesize,#curvature = 0.2,
                arrow = arrow(length = unit(0, "pt"), type = "closed", angle=90)) +
@@ -232,23 +238,25 @@ plot_interaction_network <- function(diff_exp_results=NULL, query_genes=NULL, pv
                aes(color= interaction_type), alpha=0.5,size=edgesize,#curvature = 0.2,
                arrow = arrow(length = unit(3, "pt"), type = "closed", angle=90)) +
     scale_color_manual(values=interaction_colors)+
-    labs(color = "Gene Interaction") +
+    labs(color = "Gene Interaction")
+  
+  nodes_plot <- edges_plot +
     new_scale_color()+
-    # geom_nodes(aes(fill=logFC, alpha=pval_binary),
-    # geom_nodes(data = subset(plotdata, mutated %in% "Inhibition"),
-    geom_nodes(aes(fill=logFC, shape=mutated, alpha=pval_binary, color=pval_binary,size = strength),
+    # geom_nodes(aes(fill=logFC, shape=mutated, alpha=pval_binary, color=pval_binary,size = strength),
+    geom_nodes(
+               aes(fill=size_val, shape=mutated, alpha=pval_binary, color=pval_binary,size = size_val),
                show.legend = showFClegend) +
-               # size = nodesize, show.legend = showFClegend) +
-               # color = "grey50", size = nodesize, lwd=2) +
-               # shape = 21, color = "grey50") +#, size = nodesize, lwd=2) +
     scale_color_manual(values=outline_vals)+
     labs(color = "logFC pval\n(outline color)",
          fill = "Expression logFC") +
     scale_shape_manual(values=shape_vals) +
     labs(shape = "Mutations") +
-    scale_fill_distiller(palette = "PiYG",na.value = "grey80", limit=fc_color_limit, direction = 1) +
+    
+    scale_fill_distiller(palette = "PiYG",na.value = "steelblue", direction = 1) +
     # scale_fill_gradientn(colors=fc_colors,values=fc_colors.values,na.value = "grey80") +
-    scale_alpha_manual(values=alpha_vals, guide=FALSE)+
+    scale_alpha_manual(values=alpha_vals, guide=FALSE)
+  
+  labeled_plot <- nodes_plot +
     new_scale_color()+
     geom_nodetext(aes( label = vertex.names, color=mutated ),
     # geom_nodetext(aes( label = vertex.names, color=logFC ),
@@ -261,6 +269,8 @@ plot_interaction_network <- function(diff_exp_results=NULL, query_genes=NULL, pv
     ggtitle(paste0("Interactions among ", title_text,"\n(",length(V(curr_graph))," genes plotted)")) +
     theme_blank()
   
+  myplot <- labeled_plot
+  
   if (! is.null(savename)) {
     # ggsave(myplot, filename = savename, width=8, height=8) 
     mydpi=300
@@ -271,6 +281,9 @@ plot_interaction_network <- function(diff_exp_results=NULL, query_genes=NULL, pv
     print(myplot)
   }
   
+  if (is.function(progress_func)) {
+    progress_func(value=90, detail = "Returning plot...")
+  }
   # return(myplot)
   return_list <- list(plot=myplot, ngenes=length(V(curr_graph)))
   return(return_list)

@@ -11,6 +11,7 @@ library(svgPanZoom)
 library(gridSVG)
 library(shinycssloaders)
 library(shinyWidgets)
+library(shinythemes)
 
 library(BiocManager)
 library(maftools)
@@ -29,6 +30,7 @@ shinyServer(function(input, output, session) {
   plot_values <- reactiveValues()
   plot_values$diff_exp_mat <- NULL
   plot_values$curr_plot <- NA
+  
   
   observeEvent(input$diff_exp_file, {
     req(input$diff_exp_file)
@@ -82,7 +84,24 @@ shinyServer(function(input, output, session) {
       plot_values$fc_column <- ifelse(input$fc_column=="","logFC",input$fc_column)
       plot_values$pval_column <- ifelse(input$pval_column=="","adj.P.Val",input$pval_column)
       
-      withProgress({
+      # Create a Progress object
+      progress <- shiny::Progress$new(session,max=100)
+      progress$set(value = 0, message = "Setting up...")
+      # Make sure it closes when we exit this reactive, even if there's an error
+      on.exit(progress$close())
+      
+      updateProgress <- function(value = NULL, detail = NULL) {
+        if (is.null(value)) {
+          value <- progress$getValue()
+          value <- value + (progress$getMax() - value) / 5
+        }
+        progress$set(value = value, message = detail)
+      }
+      
+      # updateProgress(value=0,detail="")
+      # progress$set(message = "Generating network...", value = 0)
+      
+      # withProgress({
         plot_results <- plot_interaction_network(query_genes=plot_values$query_genes, 
                                               get_neighbors=input$include_neighbors,
                                               sources = input$source_checkboxes,
@@ -90,11 +109,12 @@ shinyServer(function(input, output, session) {
                                               pval_cutoff=input$pval_thresh, n_genes_cutoff=input$top_n,
                                               gene_column=plot_values$gene_column,fc_column=plot_values$fc_column,pval_column=plot_values$pval_column,
                                               # savename = plot_filename,
+                                              progress_func=updateProgress,
                                               gene_interaction_saved_data = interaction_data_file)
         
         curr_plot <- plot_results[[1]]
         plot_values$n_plotted_genes <- plot_results[[2]]
-        setProgress(value=0.9, message="Plotting...")
+        # setProgress(value=0.9, message="Plotting...")
         if (is.na(curr_plot[1])) {
           showModal(modalDialog(
             title = "No interactions found",
@@ -110,7 +130,7 @@ shinyServer(function(input, output, session) {
         updateTabsetPanel(session, "plot_types", 
                        selected = ifelse(plot_values$n_plotted_genes <= 250, "Zoomable Plot","Static Plot")
         )
-      }, message="Generating network...")
+      # }, message="Generating network...")
     }
   })
 
@@ -120,6 +140,10 @@ shinyServer(function(input, output, session) {
     click("make_plot")
   })
   
+  observeEvent(input$clear_diff_exp_file, {
+    reset("diff_exp_file")
+    plot_values$diff_exp_mat <- NULL
+  })
   output$static_plot <- renderPlot({
     req(plot_values$n_plotted_genes)
     validate(need(!is.na(plot_values$curr_plot), message=FALSE))

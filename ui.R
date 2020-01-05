@@ -3,10 +3,10 @@ library(shinyjs)
 library(shinyBS)
 library(svgPanZoom)
 library(shinycssloaders)
-library(shinyalert)
+library(shinythemes)
 
 # Define UI for data upload app ----
-shinyUI(fluidPage(
+shinyUI(fluidPage(theme = shinytheme("united"),windowTitle="FuNGIn",
   useShinyjs(),
     # App title ----
     titlePanel("Functional Networks of Gene Interactions (FuNGIn)"),
@@ -28,13 +28,22 @@ shinyUI(fluidPage(
                            choices=c("Reactome_FI","mirTarBase"),selected = "Reactome_FI"),
         
         tags$br(),
-        actionButton("make_plot", "Make Network"),
+        actionButton("make_plot", "Make Network", icon=icon("project-diagram"),
+                     # style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+                     # style="color: #333333; font-weight: bold; font-size: 20px; background-color: #ffcc00; border-color: #2e6da4"),
+                     # style="color: #000000; font-weight: bold; font-size: 14px; background-color: #009900; border-color: #2e6da4"),
+                     style="color: #000000; font-weight: bold; font-size: 16px; background-color:  #ffad33; font-family: monospace; border-color: #2e6da4"),
         
         tags$hr(),
         
         bsCollapse(id = "diff_exp_options", open = NULL,
                    bsCollapsePanel("Add Expression Data", 
                                    style="primary",
+                                   actionLink("clear_diff_exp_file", "Reset",
+                                                # style="color: #fff; background-color: #337ab7; border-color: #2e6da4"),
+                                                # style="color: #333333; font-weight: bold; font-size: 20px; background-color: #ffcc00; border-color: #2e6da4"),
+                                                # style="color: #000000; font-size: 6px; background-color: #009900; border-color: #2e6da4"),
+                                                style="color: #cccccc; font-size: 10spx;"),
                                     # Input: Select a file ----
                                    fileInput("diff_exp_file", "Choose differential expression file",
                                              multiple = FALSE,
