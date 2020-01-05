@@ -2,7 +2,8 @@ plot_interaction_network <- function(diff_exp_results=NULL, query_genes=NULL, pv
                              get_neighbors=FALSE,
                              gene_column="gene",fc_column="logFC",pval_column="adj.P.Val",
                              maf=NULL, min_mutated_samples = 1,
-                             savename=NULL,
+                             savename=NULL,plotwidth=1000, plotheight=1200,
+                             sources=c("Reactome_FI"),
                              gene_interaction_saved_data="data/gene_interactions.Rdata") {
   
   require(igraph)
@@ -14,20 +15,32 @@ plot_interaction_network <- function(diff_exp_results=NULL, query_genes=NULL, pv
   require(ggnewscale)
   require(maftools)
   
+  set.seed(1234)
+  
   if (file.exists(gene_interaction_saved_data)) {
     load(gene_interaction_saved_data)
   } else {
     stop("Need saved network interaction data.")
   }
   
-  full_interaction_network <- graph_from_data_frame(gene_int_mat.uniq)
+  # browser()
+  if ("data_source" %in% colnames(gene_int_mat.uniq)) {
+    # sources <- c("Reactome_FI", "miRTarBase")
+    # sources <- c("Reactome_FI")
+    myinteractions <- gene_int_mat.uniq[gene_int_mat.uniq$data_source %in% sources,]
+  } else {
+    myinteractions <- gene_int_mat.uniq
+  }
+  myinteractions <- myinteractions[, !colnames(myinteractions) %in% "data_source"]
+  print(paste0("Total interaction in DB: ", nrow(myinteractions)))
+  full_interaction_network <- graph_from_data_frame(myinteractions)
   
   if (is.null(diff_exp_results)) {
     diff_exp_results <- as.data.frame(matrix(0, nrow=1, ncol=3))
     colnames(diff_exp_results) <- c(gene_column, fc_column, pval_column)
   }
   diff_exp_results <- diff_exp_results[order(diff_exp_results[,pval_column], decreasing = F),]
-  
+  # print(dim(diff_exp_results))
   # browser()
   if (is.null(query_genes)) {
     query_genes <- diff_exp_results[diff_exp_results[,pval_column] < pval_cutoff,gene_column]
@@ -38,13 +51,21 @@ plot_interaction_network <- function(diff_exp_results=NULL, query_genes=NULL, pv
   }
   title_text <- paste0(title_text, ifelse(get_neighbors, "\nNeighbors included",""))
   
+  print(title_text)
   query_genes <- query_genes[query_genes %in% names(V(full_interaction_network))]
+  print(paste0("len query_genes: ",length(query_genes)))
+  
   if (length(query_genes)==0) {
-    warning(paste0("Top ", n_genes_cutoff, " not found in interaction data"))
-    return(NA)
+    return_list <- list(plot=NA, ngenes=NA)
+    return(return_list)
   }
   
   if (get_neighbors) {
+    # print(sum(is.na(query_genes)))
+    # print(query_genes)
+    # print(names(V(full_interaction_network)[query_genes]))
+    # write.table(query_genes, file="query_genes.txt", row.names=F, sep = "\t",col.names=F, quote=F)
+    # write.table(names(V(full_interaction_network)), file="node_names.txt", row.names=F, sep = "\t",col.names=F, quote=F)
     neighborhood <- ego(full_interaction_network, nodes=V(full_interaction_network)[query_genes])
     query_nodes <- unlist(neighborhood)
   } else {
@@ -114,7 +135,8 @@ plot_interaction_network <- function(diff_exp_results=NULL, query_genes=NULL, pv
   if (length(isolated_nodes)/length(V(curr_graph)) > 0.8) {
     warning("Too few edges, so skipping...")
     # isolated_nodes <- c()
-    return(NA)
+    return_list <- list(plot=NA, ngenes=NA)
+    return(return_list)
   }
   nodes_to_remove <- union(nonsig_nodes, isolated_nodes)
   nodes_to_remove <- nodes_to_remove[!is.na(nodes_to_remove)]
@@ -126,15 +148,16 @@ plot_interaction_network <- function(diff_exp_results=NULL, query_genes=NULL, pv
   edgelist<-data.frame(get.edgelist(curr_graph))
   weights <- strengths[match(edgelist[,1], names(strengths))]
   # weights <- 10^(1-weights/max(weights))
-  weights <- 2^(1-weights/max(weights))
+  # weights <- 2^(1-weights/max(weights))
+  weights <- exp(1-weights/max(weights))
   curr_graph <- set_edge_attr(curr_graph, "weights", value=weights)
   
   change_bin <- ifelse(edge_attr(curr_graph,"change")==0,"Other",ifelse(edge_attr(curr_graph,"change")<0,"Inhibition", "Activation"))
   curr_graph <- set_edge_attr(curr_graph,"interaction_type",value=change_bin)
   
-  if (length(V(curr_graph)$name) < 1) {
-    browser()
-  }
+  # if (length(V(curr_graph)$name) < 1) {
+  #   browser()
+  # }
   
   plotgraph <- asNetwork(curr_graph)
   
@@ -200,13 +223,13 @@ plot_interaction_network <- function(diff_exp_results=NULL, query_genes=NULL, pv
     # layout = "mds") +
     # geom_edges(color= "grey50", alpha=0.5,size=0.1,curvature = 0.2,
     geom_edges(data = subset(plotdata, interaction_type %in% "Other"),
-               aes(color= interaction_type), alpha=0.5,size=edgesize,curvature = 0.2,
+               aes(color= interaction_type), alpha=0.5,size=edgesize,#curvature = 0.2,
                arrow = arrow(length = unit(0, "pt"), type = "closed", angle=90)) +
     geom_edges(data = subset(plotdata, interaction_type %in% "Activation"),
-               aes(color= interaction_type), alpha=0.5,size=edgesize,curvature = 0.2,
+               aes(color= interaction_type), alpha=0.5,size=edgesize,#curvature = 0.2,
                arrow = arrow(length = unit(3, "pt"), type = "closed")) +
     geom_edges(data = subset(plotdata, interaction_type %in% "Inhibition"),
-               aes(color= interaction_type), alpha=0.5,size=edgesize,curvature = 0.2,
+               aes(color= interaction_type), alpha=0.5,size=edgesize,#curvature = 0.2,
                arrow = arrow(length = unit(3, "pt"), type = "closed", angle=90)) +
     scale_color_manual(values=interaction_colors)+
     labs(color = "Gene Interaction") +
@@ -239,13 +262,18 @@ plot_interaction_network <- function(diff_exp_results=NULL, query_genes=NULL, pv
     theme_blank()
   
   if (! is.null(savename)) {
-    ggsave(myplot, filename = savename, width=8, height=8) 
+    # ggsave(myplot, filename = savename, width=8, height=8) 
+    mydpi=300
+    plotwidth_inches=plotwidth/mydpi
+    plotheight_inches=plotheight/mydpi
+    ggsave(myplot, filename = savename, width=plotwidth_inches, height=plotheight_inches, units = "in", dpi=mydpi) 
   } else {
     print(myplot)
   }
   
-  
-  return(myplot)
+  # return(myplot)
+  return_list <- list(plot=myplot, ngenes=length(V(curr_graph)))
+  return(return_list)
 }
 
 
