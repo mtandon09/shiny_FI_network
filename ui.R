@@ -6,7 +6,7 @@ library(shinycssloaders)
 library(shinythemes)
 
 # Define UI for data upload app ----
-shinyUI(fluidPage(theme = shinytheme("united"),windowTitle="FuNGIn",
+shinyUI(fluidPage(theme = shinytheme("sandstone"),windowTitle="FuNGIn",
   useShinyjs(),
     # App title ----
     titlePanel("Functional Networks of Gene Interactions (FuNGIn)"),
