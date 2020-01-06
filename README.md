@@ -29,6 +29,9 @@ So far, the idea is that you can view interactions among gene(s) of interest, an
     ![alt text](screenshots/query_genes_with_diff_exp.png "Differential expression data on queried genes")
 
 ## How to run
+### Install R and RStudio
+Here's an [installation guide](http://www.sthda.com/english/wiki/installing-r-and-rstudio-easy-r-programming) if you don't have these already.
+
 ### Install Required Packages
 ```
 list.of.packages <- c("shiny","shinyjs","shinyBS","openxlsx","igraph","qgraph","ggnetwork","network","intergraph","RColorBrewer","ggnewscale","svgPanZoom","gridSVG","shinycssloaders","shinyWidgets")
