@@ -7,6 +7,7 @@ So far, the idea is that you can view interactions among gene(s) of interest, an
  
 * [Use cases:](#use-cases)
 * [How to run](#how-to-run)
+   * [Install R and RStudio](#install-R-and-RStudio)
    * [Install Required Packages](#install-required-packages)
    * [Run from GitHub in RStudio](#run-from-github-in-rstudio)
 * [Differential Expression Data](#differential-expression-data)
