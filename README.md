@@ -7,6 +7,7 @@ So far, the idea is that you can view interactions among gene(s) of interest, an
  
 * [Use cases:](#use-cases)
 * [How to run](#how-to-run)
+   * [Install R and RStudio](#install-R-and-RStudio)
    * [Install Required Packages](#install-required-packages)
    * [Run from GitHub in RStudio](#run-from-github-in-rstudio)
 * [Differential Expression Data](#differential-expression-data)
@@ -29,6 +30,9 @@ So far, the idea is that you can view interactions among gene(s) of interest, an
     ![alt text](screenshots/query_genes_with_diff_exp.png "Differential expression data on queried genes")
 
 ## How to run
+### Install R and RStudio
+Here's an [installation guide](http://www.sthda.com/english/wiki/installing-r-and-rstudio-easy-r-programming) if you don't have these already.
+
 ### Install Required Packages
 ```
 list.of.packages <- c("shiny","shinyjs","shinyBS","openxlsx","igraph","qgraph","ggnetwork","network","intergraph","RColorBrewer","ggnewscale","svgPanZoom","gridSVG","shinycssloaders","shinyWidgets")
@@ -45,7 +49,7 @@ if(length(new.bioc.packages)) BiocManager::install(new.bioc.packages)
 ### Run from GitHub in RStudio
 ```
 library(shiny)
-runGitHub( "shiny_FI_network", "mtandon09", ref="with_mirna")
+runGitHub( "shiny_FI_network", "mtandon09", ref="master")
 ```
 
 
