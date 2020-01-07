@@ -1,5 +1,5 @@
 # Functional Networks of Gene Interactions (FuNGIn)
-*like fun+engine*
+*Fungin like fun+engine*
  
 ## Shiny app for plotting gene functional interaction networks
 
