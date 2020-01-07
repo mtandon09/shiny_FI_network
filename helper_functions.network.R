@@ -43,6 +43,16 @@ plot_interaction_network <- function(diff_exp_results=NULL, query_genes=NULL, pv
     diff_exp_results <- as.data.frame(matrix(NA, nrow=1, ncol=3))
     colnames(diff_exp_results) <- c(gene_column, fc_column, pval_column)
   }
+  missing_cols <- which(!c(gene_column, fc_column, pval_column) %in% colnames(diff_exp_results))
+  
+  if (length(missing_cols) > 0) {
+    missing_col_name=c("gene column", "fold change column","p-value column")
+    
+    return_list <- list(plot=NA, ngenes=NA, 
+                        reason=paste0("check ",paste0(missing_col_name[missing_cols], collapse = ","," selection"))
+    )
+    return(return_list)
+  }
   diff_exp_results <- diff_exp_results[order(diff_exp_results[,pval_column], decreasing = F),]
   # print(dim(diff_exp_results))
   # browser()
@@ -60,12 +70,12 @@ plot_interaction_network <- function(diff_exp_results=NULL, query_genes=NULL, pv
   print(paste0("len query_genes: ",length(query_genes)))
   
   if (length(query_genes)==0) {
-    return_list <- list(plot=NA, ngenes=NA)
+    return_list <- list(plot=NA, ngenes=NA, reason="No input genes found.")
     return(return_list)
   }
   
   if (is.function(progress_func)) {
-    progress_func(value=20, detail = "Trimming network...")
+    progress_func(value=20, detail = "Adding neighbors...")
   }
   
   if (get_neighbors) {
@@ -81,6 +91,9 @@ plot_interaction_network <- function(diff_exp_results=NULL, query_genes=NULL, pv
   }
   
   
+  if (is.function(progress_func)) {
+    progress_func(value=40, detail = "Trimming network...")
+  }
   my_interaction_graph <- simplify(induced_subgraph(full_interaction_network,query_nodes), edge.attr.comb="sum")
   match_idx <- match(V(my_interaction_graph)$name,diff_exp_results[,gene_column],nomatch = 0)
   diff_exp <- diff_exp_results[match_idx,c(gene_column, fc_column, pval_column)]
@@ -114,6 +127,9 @@ plot_interaction_network <- function(diff_exp_results=NULL, query_genes=NULL, pv
     mut_status$is_altered <- NA
   }
   
+  if (is.function(progress_func)) {
+    progress_func(value=20, detail = "Preparing plot data...")
+  }
   curr_graph <- my_interaction_graph
   my_attrs <- data.frame(vname=V(curr_graph)$name)
   
@@ -143,9 +159,9 @@ plot_interaction_network <- function(diff_exp_results=NULL, query_genes=NULL, pv
   isolated_nodes <- V(curr_graph)$name[V(curr_graph)$strength < 1]
   
   if (length(isolated_nodes)/length(V(curr_graph)) > 0.8) {
-    warning("Too few edges, so skipping...")
+    warning("Not enough connected genes found.")
     # isolated_nodes <- c()
-    return_list <- list(plot=NA, ngenes=NA)
+    return_list <- list(plot=NA, ngenes=NA, reason="Not enough connected genes found. Maybe try adding neighbors?")
     return(return_list)
   }
   nodes_to_remove <- union(nonsig_nodes, isolated_nodes)
@@ -208,10 +224,20 @@ plot_interaction_network <- function(diff_exp_results=NULL, query_genes=NULL, pv
   # if (sum(is.infinite(fc_color_limit)) > 0) {
   if (all(is.na(plotdata$logFC))) {
     fc_color_limit <- c(0,0)
+    print(range(plotdata$logFC, na.rm=T))
+    # print(fc_color_limit)
+    # print("ALL NAs")
     showFClegend=F
+    fc_colors <- rev(brewer.pal(3,"PiYG"))
+    fc_colors.values <- c(0,0,0)
   } else {
-    fc_color_limit <- max(abs(get.vertex.attribute(plotgraph, "logFC")), na.rm = T) * c(-1, 1)
+    # fc_color_limit <- max(abs(get.vertex.attribute(plotgraph, "logFC")), na.rm = T) * c(-1, 1)
+    fc_color_limit <- max(abs(plotdata$logFC), na.rm = T) * c(-1, 1)
+    # print(range(plotdata$logFC, na.rm=T))
+    # print(fc_color_limit)
     showFClegend=T
+    fc_colors <- rev(brewer.pal(3,"PiYG"))
+    fc_colors.values <- pretty(plotdata$logFC, n=6)
   }
   
   # gene_name_colors <- c("#ff3300","#cc0000","grey50")

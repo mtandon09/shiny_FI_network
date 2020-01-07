@@ -30,6 +30,7 @@ shinyServer(function(input, output, session) {
   plot_values <- reactiveValues()
   plot_values$diff_exp_mat <- NULL
   plot_values$curr_plot <- NA
+  plot_values$err_msg <- NULL
   
   
   observeEvent(input$diff_exp_file, {
@@ -114,14 +115,24 @@ shinyServer(function(input, output, session) {
         
         curr_plot <- plot_results[[1]]
         plot_values$n_plotted_genes <- plot_results[[2]]
+        print(length(plot_results))
+        if (length(plot_results) > 2) {
+          plot_values$err_msg <- plot_results[[3]]
+        }
         # setProgress(value=0.9, message="Plotting...")
         if (is.na(curr_plot[1])) {
+          mymsg <- paste0("Enter more genes or different options to find interactions.")
+          msg_extra <- ifelse(is.null(plot_values$err_msg),"",
+                              paste0("\n",plot_values$err_msg))
+          mymsg <- paste0(mymsg, msg_extra)
+          
           showModal(modalDialog(
             title = "No interactions found",
-            "Enter more genes or different options to find interactions.",
+            mymsg,
             easyClose = TRUE,
             footer = NULL
           ))
+          plot_values$err_msg <- NULL
           plot_values$curr_plot <- NULL
         } else {
           plot_values$curr_plot <- curr_plot

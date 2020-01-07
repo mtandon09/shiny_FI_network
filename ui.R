@@ -101,10 +101,11 @@ shinyUI(fluidPage(theme = shinytheme("sandstone"),windowTitle="FuNGIn",
                                                  tabPanel("Static Plot", 
                                                        conditionalPanel(
                                                          condition="output.makeStaticPlot==TRUE",
-                                                         plotOutput("static_plot", width = "90%", height = "800px", click = NULL,
+                                                         withSpinner(plotOutput("static_plot", width = "90%", height = "800px", click = NULL,
                                                                     dblclick = NULL, hover = NULL, hoverDelay = NULL,
                                                                     hoverDelayType = NULL, brush = NULL, clickId = NULL,
-                                                                    hoverId = NULL, inline = FALSE)
+                                                                    hoverId = NULL, inline = FALSE),
+                                                                  type=4,)
                                                          
                                                        ))
                                      ),
